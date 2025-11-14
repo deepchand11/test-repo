@@ -22,14 +22,22 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Configure AWS OIDC Authentication
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: actions/checkout@v4
+      - name: Configure AWS Credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
-          role-to-assume: arn:aws:iam::327816341313:role/github-action-s3-role
+          role-to-assume: ${{secrets.AWS_ROLE_ARN}}
           aws-region: eu-north-1
 
-      - name: Deploy to S3
-        run: |
-          aws s3 sync ./ s3://${{ vars.S3_BUCKET }} --delete
+      - name: Test AWS Credentials
+        run: aws sts get-caller-identity
+
+      # - name: Configure AWS OIDC Authentication
+      #   uses: aws-actions/configure-aws-credentials@v2
+      #   with:
+      #     role-to-assume: arn:aws:iam::327816341313:role/github-action-s3-role
+      #     aws-region: eu-north-1
+
+      # - name: Deploy to S3
+      #   run: |
+      #     aws s3 sync ./ s3://${{ vars.S3_BUCKET }} --delete
