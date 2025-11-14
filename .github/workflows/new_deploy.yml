@@ -3,9 +3,9 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - master
+      - develop
       - acceptance
-      - production
+      - master
 
   workflow_dispatch:
     inputs:
@@ -57,7 +57,7 @@ jobs:
             echo "ERROR: S3_BUCKET variable is empty."
             exit 1
           fi
-          aws s3 sync ./ s3://${{ vars.S3_BUCKET }} --delete
+          aws s3 sync ./ s3://${{ vars.S3_BUCKET }} --delete --exclude ".github/*" --exclude ".git/*" --exclude ".gitignore"
 
       - name: Verify deployment
         run: |
