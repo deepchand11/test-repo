@@ -14,8 +14,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    # GitHub will load the correct environment variables
     environment: ${{ github.event.inputs.environment }}
 
     permissions:
@@ -26,31 +24,24 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Select AWS Role ARN Based on Environment
-        id: config
-        run: |
-          if [ "${{ github.event.inputs.environment }}" = "develop" ]; then
-            echo "role_arn=${{ secrets.AWS_ROLE_ARN_DEV }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.inputs.environment }}" = "acceptance" ]; then
-            echo "role_arn=${{ secrets.AWS_ROLE_ARN_ACCEPT }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.inputs.environment }}" = "production" ]; then
-            echo "role_arn=${{ secrets.AWS_ROLE_ARN_PROD }}" >> $GITHUB_OUTPUT
-          fi
-
       - name: Configure AWS Credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
-          role-to-assume: ${{ steps.config.outputs.role_arn }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: eu-north-1
 
-      - name: Deploy to S3
-        env:
-          S3_BUCKET: ${{ vars.S3_BUCKET }}
+      - name: Validate Environment Variables
         run: |
-          if [ -z "$S3_BUCKET" ]; then
-            echo "❌ ERROR: S3_BUCKET variable is empty. Check environment variables."
+          if [ -z "${{ vars.S3_BUCKET }}" ]; then
+            echo "❌ ERROR: S3_BUCKET is empty. Set it in the GitHub Environment."
             exit 1
           fi
+          if [ -z "${{ vars.AWS_ROLE_ARN }}" ]; then
+            echo "❌ ERROR: AWS_ROLE_ARN is empty. Set it in the GitHub Environment."
+            exit 1
+          fi
+          echo "Deploying to bucket: ${{ vars.S3_BUCKET }}"
 
-          echo "Deploying to bucket: $S3_BUCKET"
-          aws s3 sync ./ s3://$S3_BUCKET --delete
+      - name: Deploy to S3
+        run: |
+          aws s3 sync ./ s3://${{ vars.S3_BUCKET }} --delete
