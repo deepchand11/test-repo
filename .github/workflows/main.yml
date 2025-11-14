@@ -27,7 +27,7 @@ jobs:
       - name: Configure AWS Credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN_DEV }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: eu-north-1
 
       - name: Validate Environment Variables
@@ -36,8 +36,8 @@ jobs:
             echo "❌ ERROR: S3_BUCKET is empty. Set it in the GitHub Environment."
             exit 1
           fi
-          if [ -z "${{ vars.AWS_ROLE_ARN_DEV }}" ]; then
-            echo "❌ ERROR: AWS_ROLE_ARN_DEV is empty. Set it in the GitHub Environment."
+          if [ -z "${{ vars.AWS_ROLE_ARN }}" ]; then
+            echo "❌ ERROR: AWS_ROLE_ARN is empty. Set it in the GitHub Environment."
             exit 1
           fi
           echo "Deploying to bucket: ${{ vars.S3_BUCKET }}"
