@@ -28,11 +28,9 @@ jobs:
         with:
           role-to-assume: ${{secrets.AWS_ROLE_ARN}}
           aws-region: eu-north-1
-      - name: Deploy to S3
-        env:
-          S3_BUCKET: ${{ vars.S3_BUCKET }}
-        run: |
-          aws s3 sync ./ s3://$S3_BUCKET --delete
+
+      - name: Test AWS Credentials
+        run: aws sts get-caller-identity
 
       # - name: Configure AWS OIDC Authentication
       #   uses: aws-actions/configure-aws-credentials@v2
