@@ -22,7 +22,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/master' && 'production') || (github.ref == 'refs/heads/acceptance' && 'acceptance') || 'acceptance' || (github.ref == 'refs/heads/develop' && 'develop') || 'develop' }}
+      name: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/master' || 'production') || (github.ref == 'refs/heads/acceptance' || 'acceptance') || 'acceptance' || (github.ref == 'refs/heads/develop' || 'develop') || 'develop' }}
     permissions:
       id-token: write # Required for OIDC authentication
       contents: read
