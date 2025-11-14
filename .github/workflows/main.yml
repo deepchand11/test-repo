@@ -1,4 +1,4 @@
-name: Main Deploy to AWS S3
+name: Main to AWS S3
 
 on:
   workflow_dispatch:
@@ -25,23 +25,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure AWS Credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v4.1.0
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: eu-north-1
 
-      - name: Validate Environment Variables
-        run: |
-          if [ -z "${{ vars.S3_BUCKET }}" ]; then
-            echo "❌ ERROR: S3_BUCKET is empty. Set it in the GitHub Environment."
-            exit 1
-          fi
-          if [ -z "${{ vars.AWS_ROLE_ARN }}" ]; then
-            echo "❌ ERROR: AWS_ROLE_ARN is empty. Set it in the GitHub Environment."
-            exit 1
-          fi
-          echo "Deploying to bucket: ${{ vars.S3_BUCKET }}"
-
       - name: Deploy to S3
+        env:
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
         run: |
-          aws s3 sync ./ s3://${{ vars.S3_BUCKET }} --delete
+          if [ -z "$S3_BUCKET" ]; then
+            echo "ERROR: S3_BUCKET variable is empty."
+            exit 1
+          fi
+          aws s3 sync ./ s3://$S3_BUCKET --delete
