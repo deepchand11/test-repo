@@ -49,6 +49,16 @@ jobs:
           # Add your deployment commands here
           # Example: aws s3 sync ./build s3://${{ vars.S3_BUCKET }}
 
+      - name: Deploy to S3
+        env:
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+        run: |
+          if [ -z "$S3_BUCKET" ]; then
+            echo "ERROR: S3_BUCKET variable is empty."
+            exit 1
+          fi
+          aws s3 sync ./ s3://${{ vars.S3_BUCKET }} --delete
+
       - name: Verify deployment
         run: |
           aws sts get-caller-identity
