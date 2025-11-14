@@ -7,7 +7,7 @@ on:
         type: choice
         description: "Select Deployment Environment"
         options:
-          - dev
+          - develop
           - acceptance
           - production
 
@@ -29,8 +29,10 @@ jobs:
           role-to-assume: ${{secrets.AWS_ROLE_ARN}}
           aws-region: eu-north-1
       - name: Deploy to S3
+        env:
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
         run: |
-          aws s3 sync ./ s3://${{ vars.S3_BUCKET }} --delete
+          aws s3 sync ./ s3://$S3_BUCKET --delete
 
       # - name: Configure AWS OIDC Authentication
       #   uses: aws-actions/configure-aws-credentials@v2
