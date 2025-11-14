@@ -1,0 +1,55 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - master
+      - acceptance
+      - production
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        type: choice
+        options:
+          - develop
+          - acceptance
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/master' && 'production') || (github.ref == 'refs/heads/acceptance' && 'acceptance') || 'acceptance' || (github.ref == 'refs/heads/develop' && 'develop') || 'develop' }}
+    permissions:
+      id-token: write # Required for OIDC authentication
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Display environment info
+        run: |
+          echo "Environment: ${{ vars.ENVIRONMENT_NAME }}"
+          echo "AWS Region: ${{ vars.AWS_REGION }}"
+          echo "Deployment URL: ${{ vars.DEPLOYMENT_URL }}"
+
+      - name: Run deployment
+        run: |
+          echo "Deploying to ${{ vars.ENVIRONMENT_NAME }}..."
+          # Add your deployment commands here
+          # Example: aws s3 sync ./build s3://${{ vars.S3_BUCKET }}
+
+      - name: Verify deployment
+        run: |
+          aws sts get-caller-identity
+          echo "Successfully authenticated with AWS"
