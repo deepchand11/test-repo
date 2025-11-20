@@ -3,9 +3,9 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - master
+      - develop
       - acceptance
-      - production
+      - master
 
   workflow_dispatch:
     inputs:
@@ -22,13 +22,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/master' && 'production') || (github.ref == 'refs/heads/acceptance' && 'acceptance') || 'acceptance' || (github.ref == 'refs/heads/develop' && 'develop') || 'develop' }}
+      # Prefer the workflow_dispatch input when present; otherwise pick by branch:
+      # master -> production, acceptance -> acceptance, develop -> develop
+      name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref == 'refs/heads/master' && 'production') || (github.ref == 'refs/heads/acceptance' && 'acceptance') || (github.ref == 'refs/heads/develop' && 'develop') }}
     permissions:
       id-token: write # Required for OIDC authentication
       contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -43,13 +47,27 @@ jobs:
           echo "AWS Region: ${{ vars.AWS_REGION }}"
           echo "Deployment URL: ${{ vars.DEPLOYMENT_URL }}"
 
-      - name: Run deployment
+      - name: Get changed and deleted files
         run: |
-          echo "Deploying to ${{ vars.ENVIRONMENT_NAME }}..."
-          # Add your deployment commands here
-          # Example: aws s3 sync ./build s3://${{ vars.S3_BUCKET }}
-
-      - name: Verify deployment
+          echo "Before: ${{ github.event.before }}"
+          echo "After:  ${{ github.sha }}"
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed.txt
+          git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} > deleted.txt
+      - name: List changed files
         run: |
-          aws sts get-caller-identity
-          echo "Successfully authenticated with AWS"
+          echo "Changed files:"
+          cat changed.txt
+          echo "Deleted files:"
+          cat deleted.txt
+      - name: Upload changed files
+        run: |
+          while read file; do
+            if [ -f "$file" ]; then
+              aws s3 cp "$file" "s3://${{ vars.S3_BUCKET }}/$file"
+            fi
+          done < changed.txt
+      - name: Delete removed files
+        run: |
+          while read file; do
+            aws s3 rm "s3://${{ vars.S3_BUCKET }}/$file"
+          done < deleted.txt
