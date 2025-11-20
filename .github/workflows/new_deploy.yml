@@ -45,23 +45,25 @@ jobs:
           echo "AWS Region: ${{ vars.AWS_REGION }}"
           echo "Deployment URL: ${{ vars.DEPLOYMENT_URL }}"
 
-      - name: Run deployment
+      - name: Find changed files
         run: |
-          echo "Deploying to ${{ vars.ENVIRONMENT_NAME }}..."
-          # Add your deployment commands here
-          # Example: aws s3 sync ./build s3://${{ vars.S3_BUCKET }}
-
-      - name: Deploy to S3
-        env:
-          S3_BUCKET: ${{ vars.S3_BUCKET }}
+          git diff --name-only HEAD~1 HEAD > changed.txt
+          git diff --name-only --diff-filter=D HEAD~1 HEAD > deleted.txt
+      - name: List changed files
         run: |
-          if [ -z "$S3_BUCKET" ]; then
-            echo "ERROR: S3_BUCKET variable is empty."
-            exit 1
-          fi
-          aws s3 sync ./ s3://${{ vars.S3_BUCKET }} --delete --exclude ".github/*" --exclude ".git/*" --exclude ".gitignore"
-
-      - name: Verify deployment
+          echo "Changed files:"
+          cat changed.txt
+          echo "Deleted files:"
+          cat deleted.txt
+      - name: Upload changed files
         run: |
-          aws sts get-caller-identity
-          echo "Successfully authenticated with AWS"
+          while read file; do
+            if [ -f "$file" ]; then
+              aws s3 cp "$file" "s3://${{ vars.S3_BUCKET }}/$file"
+            fi
+          done < changed.txt
+      - name: Delete removed files
+        run: |
+          while read file; do
+            aws s3 rm "s3://${{ vars.S3_BUCKET }}/$file"
+          done < deleted.txt
