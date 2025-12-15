@@ -1,0 +1,27 @@
+name: Deploy React App to S3
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  id-token: write # Required for OIDC authentication
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Test AWS Credentials
+        run: aws sts get-caller-identity
