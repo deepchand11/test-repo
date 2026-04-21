@@ -82,3 +82,4 @@ jobs:
     secrets:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
       SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+      ENVIRONMENT_NAME: ${{ vars.ENVIRONMENT_NAME }}

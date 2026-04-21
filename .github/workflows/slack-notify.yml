@@ -14,6 +14,8 @@ on:
         required: true
       SLACK_CHANNEL_ID:
         required: true
+      ENVIRONMENT_NAME:
+        required: true
 
 jobs:
   notify:
@@ -41,7 +43,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Repo:* ${{ github.repository }}\n*Branch:* ${{ github.ref_name }}\n*Author:* ${{ github.actor }}\n*Status:* *${{ inputs.job_status }}*"
+                    "text": "*Project:* ${{ github.repository }}\n*Branch:* ${{ github.ref_name }}\n*Author:* ${{ github.actor }}\n*Environment:* ${{ secrets.ENVIRONMENT_NAME }}"
                   }
                 },
                 {
