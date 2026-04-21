@@ -28,8 +28,15 @@ jobs:
           payload: |
             {
               "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
-              "text": "Workflow *${{ inputs.workflow_name }}* finished with status *${{ inputs.job_status }}*",
+              "text": ":rocket: Workflow *${{ inputs.workflow_name }}* finished with status *${{ inputs.job_status }}*",
               "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ inputs.job_status == 'success' && '✅' || '❌' }} ${{ inputs.workflow_name }} — ${{ inputs.job_status == 'success' && 'Succeeded' || 'Failed' }}"
+                  }
+                },
                 {
                   "type": "section",
                   "text": {
