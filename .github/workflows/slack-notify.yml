@@ -9,12 +9,13 @@ on:
       workflow_name:
         required: true
         type: string
+      environment_name:
+        required: true
+        type: string
     secrets:
       SLACK_BOT_TOKEN:
         required: true
       SLACK_CHANNEL_ID:
-        required: true
-      ENVIRONMENT_NAME:
         required: true
 
 jobs:
@@ -43,7 +44,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Project:* ${{ github.repository }}\n*Branch:* ${{ github.ref_name }}\n*Author:* ${{ github.actor }}\n*Environment:* ${{ secrets.ENVIRONMENT_NAME }}"
+                    "text": "*Project:* ${{ github.repository }}\n*Branch:* ${{ github.ref_name }}\n*Author:* ${{ github.actor }}\n*Environment:* ${{ inputs.environment_name }}"
                   }
                 },
                 {
