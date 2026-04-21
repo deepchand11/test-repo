@@ -1,0 +1,45 @@
+name: Slack Notification
+
+on:
+  workflow_call:
+    inputs:
+      job_status:
+        required: true
+        type: string
+      workflow_name:
+        required: true
+        type: string
+    secrets:
+      SLACK_BOT_TOKEN:
+        required: true
+      SLACK_CHANNEL_ID:
+        required: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack (API Method)
+        uses: slackapi/slack-github-action@v3.0.1
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            text: "🚀 Workflow *${{ inputs.workflow_name }}* finished with status *${{ inputs.job_status }}*"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: |
+                    *Repo:* ${{ github.repository }}
+                    *Branch:* ${{ github.ref_name }}
+                    *Author:* ${{ github.actor }}
+                    *Status:* *${{ inputs.job_status }}*
+              - type: actions
+                elements:
+                  - type: button
+                    text:
+                      type: plain_text
+                      text: "View Run"
+                    url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
