@@ -72,44 +72,36 @@ jobs:
             aws s3 rm "s3://${{ vars.S3_BUCKET }}/$file"
           done < deleted.txt
 
-      - name: Send Slack Notification
+      - name: Notify Slack (API Method)
         if: always()
         uses: slackapi/slack-github-action@v3.0.1
         with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
-            {
-              "text": "${{ job.status == 'success' && '✅' || '❌' }} *${{ env.WORKFLOW_NAME }}* — ${{ job.status == 'success' && 'Succeeded' || 'Failed' }}\nRepo: ${{ env.REPO }}\nBranch: ${{ env.BRANCH }}\nAuthor: ${{ env.ACTOR }}\nCommit: ${{ env.COMMIT_MSG }}\n<${{ env.RUN_URL }}|View Run>",
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "${{ job.status == 'success' && '✅' || '❌' }} ${{ env.WORKFLOW_NAME }} — ${{ job.status == 'success' && 'Succeeded' || 'Failed' }}"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    { "type": "mrkdwn", "text": "*Repo:*\n${{ env.REPO }}" },
-                    { "type": "mrkdwn", "text": "*Branch:*\n${{ env.BRANCH }}" },
-                    { "type": "mrkdwn", "text": "*Author:*\n${{ env.ACTOR }}" },
-                    { "type": "mrkdwn", "text": "*Commit:*\n${{ env.COMMIT_MSG }}" }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "<${{ env.RUN_URL }}|View Run>"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          WORKFLOW_NAME: ${{ github.workflow }}
-          REPO: ${{ github.repository }}
-          BRANCH: ${{ github.ref_name }}
-          ACTOR: ${{ github.actor }}
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            text: "🚀 Workflow *${{ github.workflow }}* finished with status *${{ job.status }}*"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: |
+                    *Repo:* ${{ github.repository }}
+                    *Branch:* ${{ github.ref_name }}
+                    *Author:* ${{ github.actor }}
+                    *Status:* *${{ job.status }}*
+              - type: actions
+                elements:
+                  - type: button
+                    text:
+                      type: plain_text
+                      text: "View Run"
+                    url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        # env:
+        #   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        #   WORKFLOW_NAME: ${{ github.workflow }}
+        #   REPO: ${{ github.repository }}
+        #   BRANCH: ${{ github.ref_name }}
+        #   ACTOR: ${{ github.actor }}
+        #   COMMIT_MSG: ${{ github.event.head_commit.message }}
+        #   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
