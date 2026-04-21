@@ -74,12 +74,11 @@ jobs:
 
       - name: Send Slack Notification
         if: always()
-        uses: slackapi/slack-github-action@v1.24.0
+        uses: slackapi/slack-github-action@v3.0.1
         with:
-          payload-templated: true
           payload: |
             {
-              "text": "${{ job.status == 'success' && '✅' || '❌' }} *${{ env.WORKFLOW_NAME }}* — ${{ job.status == 'success' && 'Succeeded' || 'Failed' }}",
+              "text": "${{ job.status == 'success' && '✅' || '❌' }} *${{ env.WORKFLOW_NAME }}* — ${{ job.status == 'success' && 'Succeeded' || 'Failed' }}\nRepo: ${{ env.REPO }}\nBranch: ${{ env.BRANCH }}\nAuthor: ${{ env.ACTOR }}\nCommit: ${{ env.COMMIT_MSG }}\n<${{ env.RUN_URL }}|View Run>",
               "blocks": [
                 {
                   "type": "header",
@@ -98,14 +97,11 @@ jobs:
                   ]
                 },
                 {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": { "type": "plain_text", "text": "View Run" },
-                      "url": "${{ env.RUN_URL }}"
-                    }
-                  ]
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{ env.RUN_URL }}|View Run>"
+                  }
                 }
               ]
             }
