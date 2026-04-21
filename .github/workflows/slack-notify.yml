@@ -54,6 +54,11 @@ jobs:
                       "type": "button",
                       "text": { "type": "plain_text", "text": "View Run" },
                       "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    },
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Commit" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
                     }
                   ]
                 }
