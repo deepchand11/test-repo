@@ -19,7 +19,18 @@ on:
           - production
 
 jobs:
+  notify-start:
+    uses: ./.github/workflows/slack-notify.yml
+    with:
+      job_status: in_progress
+      workflow_name: ${{ github.workflow }}
+      environment_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref == 'refs/heads/master' && 'production') || (github.ref == 'refs/heads/acceptance' && 'acceptance') || (github.ref == 'refs/heads/develop' && 'develop') }}
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+
   deploy:
+    needs: notify-start
     runs-on: ubuntu-latest
     environment:
       # Prefer the workflow_dispatch input when present; otherwise pick by branch:
@@ -73,7 +84,7 @@ jobs:
           done < deleted.txt
 
   notify:
-    needs: deploy
+    needs: [notify-start, deploy]
     if: always()
     uses: ./.github/workflows/slack-notify.yml
     with:
