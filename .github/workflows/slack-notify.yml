@@ -22,6 +22,17 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(git describe --tags --always 2>/dev/null || echo 'N/A')
+          echo "tag=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Notify Slack (API Method)
         uses: slackapi/slack-github-action@v3.0.1
         with:
@@ -44,7 +55,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Project:* ${{ github.event.repository.name }}\n*Branch:* ${{ github.ref_name }}\n*Author:* ${{ github.actor }}\n*Environment:* ${{ inputs.environment_name }}\n*Version:* ${{ github.ref_type == 'tag' && github.ref_name || 'N/A' }}"
+                    "text": "*Project:* ${{ github.event.repository.name }}\n*Branch:* ${{ github.ref_name }}\n*Author:* ${{ github.actor }}\n*Environment:* ${{ inputs.environment_name }}\n*Version:* ${{ steps.version.outputs.tag }}"
                   }
                 },
                 {
