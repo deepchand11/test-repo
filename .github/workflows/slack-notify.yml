@@ -1,0 +1,66 @@
+name: Slack Notification
+
+on:
+  workflow_call:
+    inputs:
+      job_status:
+        required: true
+        type: string
+      workflow_name:
+        required: true
+        type: string
+      environment_name:
+        required: true
+        type: string
+    secrets:
+      SLACK_BOT_TOKEN:
+        required: true
+      SLACK_CHANNEL_ID:
+        required: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack (API Method)
+        uses: slackapi/slack-github-action@v3.0.1
+        with:
+          errors: 'true'
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
+              "text": ":rocket: Workflow *${{ inputs.workflow_name }}* finished with status *${{ inputs.job_status }}*",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ inputs.job_status == 'success' && '✅' || '❌' }} ${{ inputs.workflow_name }} — ${{ inputs.job_status == 'success' && 'Succeeded' || 'Failed' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Project:* ${{ github.event.repository.name }}\n*Branch:* ${{ github.ref_name }}\n*Author:* ${{ github.actor }}\n*Environment:* ${{ inputs.environment_name }}\n*Version:* ${{ github.ref_type == 'tag' && github.ref_name || 'N/A' }}"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Run" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    },
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Commit" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+                    }
+                  ]
+                }
+              ]
+            }

@@ -32,6 +32,33 @@ jobs:
       - name: Test AWS Credentials
         run: aws sts get-caller-identity
 
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "🚀 *${{ github.workflow }}* — ${{ job.status }}",
+              "attachments": [
+                {
+                  "fields": [
+                    { "title": "Repo", "value": "${{ github.repository }}", "short": true },
+                    { "title": "Branch", "value": "${{ github.ref_name }}", "short": true },
+                    { "title": "Author", "value": "${{ github.actor }}", "short": true },
+                    { "title": "Commit", "value": "${{ github.event.head_commit.message }}", "short": false }
+                  ],
+                  "actions": [
+                    {
+                      "type": "button",
+                      "text": "View Run",
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
       # - name: Configure AWS OIDC Authentication
       #   uses: aws-actions/configure-aws-credentials@v2
       #   with:
